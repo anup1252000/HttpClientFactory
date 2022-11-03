@@ -1,4 +1,5 @@
 using Frontend;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,11 +19,19 @@ builder.Services.AddSwaggerGen();
 #endregion
 
 #region Uncomment this for typed httpclientfactory
-builder.Services.AddHttpClient<IWeatherService,WeatherService>(client =>
+var bulk = Policy.BulkheadAsync<HttpResponseMessage>(3, 5, x =>
 {
-    client.BaseAddress = new Uri("https://localhost:7054");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    Console.WriteLine("rejected"+x.OperationKey);
+    return Task.CompletedTask;
 });
+builder.Services.AddHttpClient<IWeatherService, WeatherService>(client =>
+ {
+     client.BaseAddress = new Uri("https://localhost:7054");
+     client.DefaultRequestHeaders.Add("Accept", "application/json");
+ })
+    .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(2)))
+    .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
+    .AddPolicyHandler(policy => bulk);
 #endregion
 
 var app = builder.Build();

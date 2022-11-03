@@ -32,8 +32,8 @@ namespace Frontend.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public async Task Get()
         {
-            for (int i = 0; i < 100; i++)
-            {
+            //for (int i = 0; i < 100; i++)
+            //{
                 #region Norml HttpClient
                 //using var httpClient = new HttpClient();
                 //var response = await httpClient.GetAsync("https://localhost:7054/WeatherForecast").Result.Content.ReadAsStringAsync();
@@ -51,7 +51,7 @@ namespace Frontend.Controllers
                 var response = await weatherService.GetWeatherAsync();
                 _logger.LogInformation(response);
                 #endregion
-            }
+            //}
         }
     }
 }
